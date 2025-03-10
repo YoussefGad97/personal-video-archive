@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -15,13 +14,12 @@ import {
 import { Search, Plus, LogOut, Settings, User as UserIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import AddVideoDialog from './AddVideoDialog';
-import { VideoFormData } from '@/lib/types';
+import { VideoFormData, Video } from '@/lib/types';
 import { v4 as uuid } from 'uuid';
-import { MOCK_VIDEOS } from '@/lib/mockData';
 
 interface NavbarProps {
   onSearch?: (query: string) => void;
-  onVideoAdded?: (video: any) => void;
+  onVideoAdded?: (video: Video) => void;
 }
 
 const Navbar: React.FC<NavbarProps> = ({ onSearch, onVideoAdded }) => {
@@ -51,10 +49,7 @@ const Navbar: React.FC<NavbarProps> = ({ onSearch, onVideoAdded }) => {
       views: 0
     };
     
-    // Add to mock videos
-    MOCK_VIDEOS.unshift(newVideo);
-    
-    // Notify parent component if needed
+    // Notify parent component if callback provided
     if (onVideoAdded) {
       onVideoAdded(newVideo);
     }

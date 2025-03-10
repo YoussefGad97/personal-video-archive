@@ -7,22 +7,31 @@ import PlaylistSection from './PlaylistSection';
 import { Video, SortOption } from '@/lib/types';
 import { MOCK_VIDEOS } from '@/lib/mockData';
 
-const VideoGallery: React.FC = () => {
+interface VideoGalleryProps {
+  searchQuery?: string;
+}
+
+const VideoGallery: React.FC<VideoGalleryProps> = ({ searchQuery = '' }) => {
   const [videos, setVideos] = useState<Video[]>(MOCK_VIDEOS);
   const [filteredVideos, setFilteredVideos] = useState<Video[]>(MOCK_VIDEOS);
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
   const [isPlayerOpen, setIsPlayerOpen] = useState(false);
   const [selectedPlaylists, setSelectedPlaylists] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<SortOption>('newest');
-  const [searchQuery, setSearchQuery] = useState('');
+  const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
+
+  // Sync search query from props to local state
+  useEffect(() => {
+    setLocalSearchQuery(searchQuery);
+  }, [searchQuery]);
 
   // Apply filters when selections change
   useEffect(() => {
     let result = [...videos];
     
     // Filter by search query
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
+    if (localSearchQuery) {
+      const query = localSearchQuery.toLowerCase();
       result = result.filter(
         video => 
           video.title.toLowerCase().includes(query) || 
@@ -54,7 +63,7 @@ const VideoGallery: React.FC = () => {
     }
     
     setFilteredVideos(result);
-  }, [videos, selectedPlaylists, sortBy, searchQuery]);
+  }, [videos, selectedPlaylists, sortBy, localSearchQuery]);
 
   const handleVideoClick = (video: Video) => {
     setSelectedVideo(video);
@@ -71,14 +80,6 @@ const VideoGallery: React.FC = () => {
     } else {
       setSelectedPlaylists([...selectedPlaylists, playlistId]);
     }
-  };
-
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-  };
-  
-  const handleVideoAdded = (newVideo: Video) => {
-    setVideos(prevVideos => [newVideo, ...prevVideos]);
   };
 
   return (
@@ -110,7 +111,7 @@ const VideoGallery: React.FC = () => {
               className="mt-4 text-primary hover:underline"
               onClick={() => {
                 setSelectedPlaylists([]);
-                setSearchQuery('');
+                setLocalSearchQuery('');
               }}
             >
               Clear all filters

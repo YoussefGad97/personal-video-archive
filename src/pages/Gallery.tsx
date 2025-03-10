@@ -1,19 +1,31 @@
 
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import Navbar from '@/components/Navbar';
 import VideoGallery from '@/components/VideoGallery';
+import { Video } from '@/lib/types';
 
 const Gallery: React.FC = () => {
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
+  const [galleryKey, setGalleryKey] = useState(0);
+  const [searchQuery, setSearchQuery] = useState('');
   
   useEffect(() => {
     if (!isLoading && !user.isAuthenticated) {
       navigate('/');
     }
   }, [user, navigate, isLoading]);
+  
+  const handleVideoAdded = (newVideo: Video) => {
+    // Force VideoGallery to re-render with new data by updating its key
+    setGalleryKey(prevKey => prevKey + 1);
+  };
+
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+  };
   
   if (isLoading) {
     return (
@@ -32,9 +44,15 @@ const Gallery: React.FC = () => {
   
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
+      <Navbar 
+        onVideoAdded={handleVideoAdded}
+        onSearch={handleSearch}
+      />
       <main>
-        <VideoGallery />
+        <VideoGallery 
+          key={galleryKey}
+          searchQuery={searchQuery}
+        />
       </main>
     </div>
   );
