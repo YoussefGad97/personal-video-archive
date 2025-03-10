@@ -2,15 +2,16 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import AuthForm from '@/components/AuthForm';
+import Navbar from '@/components/Navbar';
+import VideoGallery from '@/components/VideoGallery';
 
-const Index: React.FC = () => {
+const Gallery: React.FC = () => {
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
   
   useEffect(() => {
-    if (!isLoading && user.isAuthenticated) {
-      navigate('/gallery');
+    if (!isLoading && !user.isAuthenticated) {
+      navigate('/');
     }
   }, [user, navigate, isLoading]);
   
@@ -25,7 +26,18 @@ const Index: React.FC = () => {
     );
   }
   
-  return <AuthForm />;
+  if (!user.isAuthenticated) {
+    return null; // Will redirect via the useEffect
+  }
+  
+  return (
+    <div className="min-h-screen bg-background">
+      <Navbar />
+      <main>
+        <VideoGallery />
+      </main>
+    </div>
+  );
 };
 
-export default Index;
+export default Gallery;
