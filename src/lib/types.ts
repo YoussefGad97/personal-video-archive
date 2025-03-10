@@ -30,3 +30,12 @@ export interface FilterState {
   playlists: string[];
   sortBy: SortOption;
 }
+
+export interface VideoFormData {
+  title: string;
+  description: string;
+  thumbnailUrl: string;
+  videoUrl: string;
+  duration: number;
+  playlists: string[];
+}

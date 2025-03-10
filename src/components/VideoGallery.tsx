@@ -76,6 +76,10 @@ const VideoGallery: React.FC = () => {
   const handleSearch = (query: string) => {
     setSearchQuery(query);
   };
+  
+  const handleVideoAdded = (newVideo: Video) => {
+    setVideos(prevVideos => [newVideo, ...prevVideos]);
+  };
 
   return (
     <div className="container mx-auto px-4 py-6 animate-fade-in">

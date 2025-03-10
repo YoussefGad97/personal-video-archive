@@ -14,16 +14,22 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Search, Plus, LogOut, Settings, User as UserIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import AddVideoDialog from './AddVideoDialog';
+import { VideoFormData } from '@/lib/types';
+import { v4 as uuid } from 'uuid';
+import { MOCK_VIDEOS } from '@/lib/mockData';
 
 interface NavbarProps {
   onSearch?: (query: string) => void;
+  onVideoAdded?: (video: any) => void;
 }
 
-const Navbar: React.FC<NavbarProps> = ({ onSearch }) => {
+const Navbar: React.FC<NavbarProps> = ({ onSearch, onVideoAdded }) => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [isScrolled, setIsScrolled] = useState(false);
+  const [isAddVideoDialogOpen, setIsAddVideoDialogOpen] = useState(false);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
@@ -35,6 +41,23 @@ const Navbar: React.FC<NavbarProps> = ({ onSearch }) => {
   const handleLogout = () => {
     logout();
     navigate('/');
+  };
+
+  const handleAddVideo = (videoData: VideoFormData) => {
+    const newVideo = {
+      ...videoData,
+      id: uuid(),
+      dateAdded: new Date().toISOString().split('T')[0], // today's date in YYYY-MM-DD format
+      views: 0
+    };
+    
+    // Add to mock videos
+    MOCK_VIDEOS.unshift(newVideo);
+    
+    // Notify parent component if needed
+    if (onVideoAdded) {
+      onVideoAdded(newVideo);
+    }
   };
 
   useEffect(() => {
@@ -80,6 +103,7 @@ const Navbar: React.FC<NavbarProps> = ({ onSearch }) => {
             variant="outline" 
             size="sm" 
             className="flex items-center gap-2 hover:bg-secondary transition-all duration-300"
+            onClick={() => setIsAddVideoDialogOpen(true)}
           >
             <Plus className="h-4 w-4" />
             <span className="hidden sm:inline">Add Video</span>
@@ -116,6 +140,12 @@ const Navbar: React.FC<NavbarProps> = ({ onSearch }) => {
           </DropdownMenu>
         </div>
       </div>
+      
+      <AddVideoDialog 
+        isOpen={isAddVideoDialogOpen} 
+        onClose={() => setIsAddVideoDialogOpen(false)}
+        onAddVideo={handleAddVideo}
+      />
     </header>
   );
 };
