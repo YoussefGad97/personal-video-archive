@@ -25,8 +25,9 @@ const VideoGallery: React.FC<VideoGalleryProps> = ({ searchQuery = '' }) => {
     setLocalSearchQuery(searchQuery);
   }, [searchQuery]);
   
-  // Load videos from MOCK_VIDEOS whenever the component renders/rerenders
+  // Reload videos from MOCK_VIDEOS whenever the component renders or MOCK_VIDEOS changes
   useEffect(() => {
+    console.log("Reloading videos from MOCK_VIDEOS", MOCK_VIDEOS.length);
     setVideos([...MOCK_VIDEOS]);
   }, []);
 

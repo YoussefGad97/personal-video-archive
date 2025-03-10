@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
-import { VideoFormData, Playlist } from '@/lib/types';
+import { VideoFormData, Playlist, Video } from '@/lib/types';
 import { MOCK_PLAYLISTS, MOCK_VIDEOS } from '@/lib/mockData';
 import { v4 as uuid } from 'uuid';
 
@@ -54,33 +54,46 @@ const AddVideoDialog: React.FC<AddVideoDialogProps> = ({ isOpen, onClose, onAddV
   });
 
   const onSubmit = (data: VideoFormData) => {
-    // Calculate total duration in seconds
-    const totalDuration = (parseInt(durationMinutes || '0') * 60) + parseInt(durationSeconds || '0');
-    
-    const videoData = {
-      ...data,
-      duration: totalDuration,
-      playlists: selectedPlaylists,
-    };
-    
-    // Add video to MOCK_VIDEOS
-    MOCK_VIDEOS.unshift({
-      ...videoData,
-      id: uuid(),
-      dateAdded: new Date().toISOString().split('T')[0],
-      views: 0
-    });
-    
-    // Call the callback function to notify parent
-    onAddVideo(videoData);
-    
-    // Reset form
-    reset();
-    setSelectedPlaylists([]);
-    setDurationMinutes('0');
-    setDurationSeconds('0');
-    onClose();
-    toast.success('Video added successfully');
+    try {
+      // Calculate total duration in seconds
+      const totalDuration = (parseInt(durationMinutes || '0') * 60) + parseInt(durationSeconds || '0');
+      
+      // Create the new video object with all required fields
+      const newVideo: Video = {
+        id: uuid(),
+        title: data.title,
+        description: data.description,
+        thumbnailUrl: data.thumbnailUrl,
+        videoUrl: data.videoUrl,
+        duration: totalDuration,
+        playlists: selectedPlaylists,
+        dateAdded: new Date().toISOString().split('T')[0],
+        views: 0
+      };
+      
+      console.log("Adding new video:", newVideo);
+      
+      // Add the new video to the beginning of MOCK_VIDEOS array
+      MOCK_VIDEOS.unshift(newVideo);
+      
+      // Call the callback to notify parent component
+      onAddVideo(newVideo);
+      
+      // Reset form state
+      reset();
+      setSelectedPlaylists([]);
+      setDurationMinutes('0');
+      setDurationSeconds('0');
+      
+      // Close the dialog
+      onClose();
+      
+      // Show success message
+      toast.success('Video added successfully');
+    } catch (error) {
+      console.error("Error adding video:", error);
+      toast.error('Failed to add video');
+    }
   };
 
   const handlePlaylistToggle = (playlistId: string) => {

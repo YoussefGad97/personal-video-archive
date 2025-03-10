@@ -5,6 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import Navbar from '@/components/Navbar';
 import VideoGallery from '@/components/VideoGallery';
 import { Video } from '@/lib/types';
+import { MOCK_VIDEOS } from '@/lib/mockData';
 
 const Gallery: React.FC = () => {
   const { user, isLoading } = useAuth();
@@ -19,6 +20,7 @@ const Gallery: React.FC = () => {
   }, [user, navigate, isLoading]);
   
   const handleVideoAdded = (newVideo: Video) => {
+    console.log("Video added, refreshing gallery...", newVideo);
     // Force VideoGallery to re-render with new data by updating its key
     setGalleryKey(prevKey => prevKey + 1);
   };
