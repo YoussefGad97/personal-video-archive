@@ -12,8 +12,8 @@ interface VideoGalleryProps {
 }
 
 const VideoGallery: React.FC<VideoGalleryProps> = ({ searchQuery = '' }) => {
-  const [videos, setVideos] = useState<Video[]>(MOCK_VIDEOS);
-  const [filteredVideos, setFilteredVideos] = useState<Video[]>(MOCK_VIDEOS);
+  const [videos, setVideos] = useState<Video[]>([...MOCK_VIDEOS]);
+  const [filteredVideos, setFilteredVideos] = useState<Video[]>([...MOCK_VIDEOS]);
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
   const [isPlayerOpen, setIsPlayerOpen] = useState(false);
   const [selectedPlaylists, setSelectedPlaylists] = useState<string[]>([]);
@@ -24,6 +24,11 @@ const VideoGallery: React.FC<VideoGalleryProps> = ({ searchQuery = '' }) => {
   useEffect(() => {
     setLocalSearchQuery(searchQuery);
   }, [searchQuery]);
+  
+  // Load videos from MOCK_VIDEOS whenever the component renders/rerenders
+  useEffect(() => {
+    setVideos([...MOCK_VIDEOS]);
+  }, []);
 
   // Apply filters when selections change
   useEffect(() => {

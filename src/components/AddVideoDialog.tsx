@@ -55,7 +55,7 @@ const AddVideoDialog: React.FC<AddVideoDialogProps> = ({ isOpen, onClose, onAddV
 
   const onSubmit = (data: VideoFormData) => {
     // Calculate total duration in seconds
-    const totalDuration = (parseInt(durationMinutes) * 60) + parseInt(durationSeconds);
+    const totalDuration = (parseInt(durationMinutes || '0') * 60) + parseInt(durationSeconds || '0');
     
     const videoData = {
       ...data,
@@ -63,7 +63,18 @@ const AddVideoDialog: React.FC<AddVideoDialogProps> = ({ isOpen, onClose, onAddV
       playlists: selectedPlaylists,
     };
     
+    // Add video to MOCK_VIDEOS
+    MOCK_VIDEOS.unshift({
+      ...videoData,
+      id: uuid(),
+      dateAdded: new Date().toISOString().split('T')[0],
+      views: 0
+    });
+    
+    // Call the callback function to notify parent
     onAddVideo(videoData);
+    
+    // Reset form
     reset();
     setSelectedPlaylists([]);
     setDurationMinutes('0');
