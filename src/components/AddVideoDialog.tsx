@@ -274,10 +274,29 @@ const AddVideoDialog: React.FC<AddVideoDialogProps> = ({
         URL.revokeObjectURL(data.videoUrl || "");
       }
 
-      // Close and show success
+      // Close dialog first for better UX
       onClose();
-      toast.success("Video added successfully");
-      // show small visual confirmation
+
+      // Show enhanced success notification
+      toast.success("Video Added Successfully", {
+        description: `"${data.title}" has been added to your library${
+          selectedPlaylists.length > 0
+            ? ` and ${selectedPlaylists.length} playlist${
+                selectedPlaylists.length > 1 ? "s" : ""
+              }`
+            : ""
+        }.`,
+        action: {
+          label: "View",
+          onClick: () => {
+            // You could add functionality here to view the added video
+            console.log("View video:", newVideo.id);
+          },
+        },
+        duration: 5000, // Show for 5 seconds
+      });
+
+      // Show small visual confirmation
       setSuccessVisible(true);
     } catch (error) {
       console.error("Error adding video:", error);

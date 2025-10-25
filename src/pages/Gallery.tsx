@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -6,7 +5,7 @@ import Navbar from '@/components/Navbar';
 import VideoGallery from '@/components/VideoGallery';
 import HeroSection from '@/components/HeroSection';
 import { Video } from '@/lib/types';
-import { MOCK_VIDEOS } from '@/lib/mockData';
+
 
 const Gallery: React.FC = () => {
   const { user, isLoading } = useAuth();
@@ -48,7 +47,7 @@ const Gallery: React.FC = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <HeroSection />
+      <HeroSection 
         onVideoAdded={handleVideoAdded}
         onSearch={handleSearch}
       />

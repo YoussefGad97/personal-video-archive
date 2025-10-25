@@ -156,7 +156,12 @@ const Navbar: React.FC<NavbarProps> = ({ onSearch, onVideoAdded }) => {
       <AddVideoDialog 
         isOpen={isAddVideoDialogOpen} 
         onClose={() => setIsAddVideoDialogOpen(false)}
-        onAddVideo={handleAddVideo}
+        onAddVideo={(video) => {
+          // If you want to notify parent, call onVideoAdded
+          if (onVideoAdded) {
+            onVideoAdded(video);
+          }
+        }}
       />
     </header>
   );
