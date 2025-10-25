@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import Navbar from '@/components/Navbar';
 import VideoGallery from '@/components/VideoGallery';
+import HeroSection from '@/components/HeroSection';
 import { Video } from '@/lib/types';
 import { MOCK_VIDEOS } from '@/lib/mockData';
 
@@ -46,7 +47,8 @@ const Gallery: React.FC = () => {
   
   return (
     <div className="min-h-screen bg-background">
-      <Navbar 
+      <Navbar />
+      <HeroSection />
         onVideoAdded={handleVideoAdded}
         onSearch={handleSearch}
       />

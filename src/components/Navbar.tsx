@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useTheme } from 'next-themes';
+import { Sun, Moon } from 'lucide-react';
 import { useAuth } from '@/context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -55,6 +57,11 @@ const Navbar: React.FC<NavbarProps> = ({ onSearch, onVideoAdded }) => {
     }
   };
 
+  // theme
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+
   useEffect(() => {
     const handleScroll = () => {
       const offset = window.scrollY;
@@ -94,6 +101,16 @@ const Navbar: React.FC<NavbarProps> = ({ onSearch, onVideoAdded }) => {
         </div>
 
         <div className="flex items-center gap-4">
+          {/* Theme toggle */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            className="hidden sm:flex items-center gap-2"
+            aria-label="Toggle dark mode"
+          >
+            {mounted && (theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />)}
+          </Button>
           <Button 
             variant="outline" 
             size="sm" 

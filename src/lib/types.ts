@@ -38,4 +38,6 @@ export interface VideoFormData {
   videoUrl: string;
   duration: number;
   playlists: string[];
+  videoSource: 'local' | 'youtube' | 'url';
+  videoFile?: File;
 }
