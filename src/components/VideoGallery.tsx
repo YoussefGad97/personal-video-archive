@@ -92,6 +92,10 @@ const VideoGallery: React.FC<VideoGalleryProps> = ({ searchQuery = '' }) => {
     setIsPlayerOpen(true);
   };
 
+  const handleSelectSuggestedVideo = (video: Video) => {
+    setSelectedVideo(video);
+  };
+
   const handlePlayerClose = () => {
     setIsPlayerOpen(false);
   };
@@ -162,6 +166,7 @@ const VideoGallery: React.FC<VideoGalleryProps> = ({ searchQuery = '' }) => {
         video={selectedVideo} 
         isOpen={isPlayerOpen} 
         onClose={handlePlayerClose} 
+        onSelectVideo={handleSelectSuggestedVideo}
       />
     </div>
   );
