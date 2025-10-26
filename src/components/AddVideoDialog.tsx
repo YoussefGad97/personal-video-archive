@@ -4,8 +4,8 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { VideoFormData, Playlist, Video } from "@/lib/types";
-import { MOCK_PLAYLISTS, MOCK_VIDEOS } from "@/lib/mockData";
-import { v4 as uuid } from "uuid";
+import { MOCK_PLAYLISTS } from "@/lib/mockData";
+import { addVideo } from "@/lib/localVideoService";
 
 import {
   Dialog,
@@ -21,11 +21,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
 import { Upload, Youtube, Link2 } from "lucide-react";
 
 const videoSchema = z.object({
   title: z.string().min(1, "Title is required"),
-  description: z.string().min(1, "Description is required"),
+  description: z.string().optional(),
   thumbnailUrl: z.string().optional(),
   videoSource: z.enum(["local", "youtube", "url"]),
   videoUrl: z.string().url("Must be a valid URL").optional(),
@@ -52,6 +53,7 @@ const AddVideoDialog: React.FC<AddVideoDialogProps> = ({
 }) => {
   const [selectedPlaylists, setSelectedPlaylists] = useState<string[]>([]);
   const [isDetecting, setIsDetecting] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [selectedVideoSource, setSelectedVideoSource] = useState<
     "local" | "youtube" | "url"
   >("youtube");
@@ -139,7 +141,7 @@ const AddVideoDialog: React.FC<AddVideoDialogProps> = ({
     setIsDetecting(true);
 
     if (videoSourceWatched === "youtube") {
-      // YouTube thumbnail detection
+      // YouTube thumbnail and title detection
       const ytMatch = url.match(
         /(?:v=|\/embed\/|youtu\.be\/)([A-Za-z0-9_-]{11})/
       );
@@ -147,10 +149,38 @@ const AddVideoDialog: React.FC<AddVideoDialogProps> = ({
         const id = ytMatch[1];
         const thumb = `https://img.youtube.com/vi/${id}/hqdefault.jpg`;
         setValue("thumbnailUrl", thumb);
-        // duration for YouTube requires API
-        setIsDetecting(false);
+        
+        // Fetch YouTube video title using oEmbed API (no API key required)
+        const fetchYouTubeTitle = async () => {
+          try {
+            const oembedUrl = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${id}&format=json`;
+            const response = await fetch(oembedUrl);
+            
+            if (!cancelled && response.ok) {
+              const data = await response.json();
+              if (data.title) {
+                // Only set title if it's currently empty
+                const currentTitle = getValues("title");
+                if (!currentTitle || currentTitle.trim() === "") {
+                  setValue("title", data.title);
+                  toast.success("Video title auto-populated from YouTube");
+                }
+              }
+            }
+          } catch (error) {
+            console.error("Error fetching YouTube title:", error);
+            // Don't show error toast, it's not critical
+          } finally {
+            if (!cancelled) {
+              setIsDetecting(false);
+            }
+          }
+        };
+        
+        fetchYouTubeTitle();
         return;
       }
+      setIsDetecting(false);
     } else {
       // Try to load metadata for direct video URLs
       try {
@@ -215,6 +245,8 @@ const AddVideoDialog: React.FC<AddVideoDialogProps> = ({
   }, [videoUrlWatched, videoSourceWatched]);
 
   const onSubmit = async (data: VideoFormData) => {
+    setIsSubmitting(true);
+    
     try {
       let finalVideoUrl = data.videoUrl;
       const totalDuration = data.duration ?? 0;
@@ -237,31 +269,31 @@ const AddVideoDialog: React.FC<AddVideoDialogProps> = ({
         );
         if (!ytMatch) {
           toast.error("Invalid YouTube URL");
+          setIsSubmitting(false);
           return;
         }
         // Convert to embed URL for player compatibility
         finalVideoUrl = `https://www.youtube.com/embed/${ytMatch[1]}`;
       }
 
-      // Create the new video object
-      const newVideo: Video = {
-        id: uuid(),
+      // Create the new video object (without id, Firestore will generate it)
+      const videoData = {
         title: data.title,
-        description: data.description,
+        description: data.description || "",
         thumbnailUrl: thumbnail,
-        videoUrl: finalVideoUrl,
+        videoUrl: finalVideoUrl || "",
         duration: totalDuration,
         playlists: selectedPlaylists,
         dateAdded: new Date().toISOString().split("T")[0],
         views: 0,
       };
 
-      console.log("Adding new video:", newVideo);
+      console.log("Adding new video to local storage:", videoData);
 
-      // Add to mock data
-      MOCK_VIDEOS.unshift(newVideo);
+      // Save to local storage
+      const newVideo = await addVideo(videoData);
 
-      // Notify parent
+      // Notify parent first
       onAddVideo(newVideo);
 
       // Reset form
@@ -274,10 +306,10 @@ const AddVideoDialog: React.FC<AddVideoDialogProps> = ({
         URL.revokeObjectURL(data.videoUrl || "");
       }
 
-      // Close dialog first for better UX
+      // Close dialog immediately
       onClose();
 
-      // Show enhanced success notification
+      // Show success notification after closing
       toast.success("Video Added Successfully", {
         description: `"${data.title}" has been added to your library${
           selectedPlaylists.length > 0
@@ -286,21 +318,13 @@ const AddVideoDialog: React.FC<AddVideoDialogProps> = ({
               }`
             : ""
         }.`,
-        action: {
-          label: "View",
-          onClick: () => {
-            // You could add functionality here to view the added video
-            console.log("View video:", newVideo.id);
-          },
-        },
-        duration: 5000, // Show for 5 seconds
+        duration: 3000,
       });
-
-      // Show small visual confirmation
-      setSuccessVisible(true);
     } catch (error) {
       console.error("Error adding video:", error);
-      toast.error("Failed to add video");
+      toast.error("Failed to add video. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -347,11 +371,12 @@ const AddVideoDialog: React.FC<AddVideoDialogProps> = ({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
+              <Label htmlFor="description">Description (Optional)</Label>
               <Textarea
                 id="description"
                 {...register("description")}
                 className="min-h-[80px]"
+                placeholder="Add a description for this video..."
               />
               {errors.description && (
                 <p className="text-sm text-destructive">
@@ -475,11 +500,11 @@ const AddVideoDialog: React.FC<AddVideoDialogProps> = ({
                     />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-sm text-muted-foreground">
-                      No thumbnail
+                      {isDetecting ? "Loading..." : "No thumbnail"}
                     </div>
                   )}
                 </div>
-                <div>
+                <div className="flex-1">
                   <div className="text-sm">
                     Duration:{" "}
                     {getValues("duration")
@@ -488,11 +513,14 @@ const AddVideoDialog: React.FC<AddVideoDialogProps> = ({
                       ? "Detecting..."
                       : "Unknown"}
                   </div>
-                  <div className="text-xs text-muted-foreground">
+                  <div className="text-xs text-muted-foreground mb-2">
                     {isDetecting
                       ? "Loading video details..."
                       : "Thumbnail and duration are fetched automatically when possible."}
                   </div>
+                  {isDetecting && (
+                    <Progress value={undefined} className="w-full" />
+                  )}
                 </div>
               </div>
             </div>
@@ -521,12 +549,19 @@ const AddVideoDialog: React.FC<AddVideoDialogProps> = ({
               </div>
             </div>
 
+            {isSubmitting && (
+              <div className="px-6 pb-4">
+                <div className="text-sm text-muted-foreground mb-2">Adding video to your library...</div>
+                <Progress value={undefined} className="w-full" />
+              </div>
+            )}
+            
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={onClose}>
+              <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
                 Cancel
               </Button>
-              <Button type="submit" disabled={isDetecting}>
-                {isDetecting ? "Loading..." : "Add Video"}
+              <Button type="submit" disabled={isDetecting || isSubmitting}>
+                {isSubmitting ? "Adding Video..." : isDetecting ? "Loading..." : "Add Video"}
               </Button>
             </DialogFooter>
           </form>

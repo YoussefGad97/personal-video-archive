@@ -81,7 +81,9 @@ const VideoCard: React.FC<VideoCardProps> = ({ video, onClick }) => {
       
       <CardContent className="px-2 pt-3 pb-1">
         <h3 className="font-medium line-clamp-1 text-base">{video.title}</h3>
-        <p className="text-muted-foreground text-sm mt-1 line-clamp-1">{video.description}</p>
+        {video.description && (
+          <p className="text-muted-foreground text-sm mt-1 line-clamp-1">{video.description}</p>
+        )}
         
         <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
           <span>{new Date(video.dateAdded).toLocaleDateString()}</span>

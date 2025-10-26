@@ -5,30 +5,46 @@ import VideoPlayer from './VideoPlayer';
 import FilterBar from './FilterBar';
 import PlaylistSection from './PlaylistSection';
 import { Video, SortOption } from '@/lib/types';
-import { MOCK_VIDEOS } from '@/lib/mockData';
+import { getAllVideos } from '@/lib/localVideoService';
+import { toast } from 'sonner';
+import { Progress } from '@/components/ui/progress';
 
 interface VideoGalleryProps {
   searchQuery?: string;
 }
 
 const VideoGallery: React.FC<VideoGalleryProps> = ({ searchQuery = '' }) => {
-  const [videos, setVideos] = useState<Video[]>([...MOCK_VIDEOS]);
-  const [filteredVideos, setFilteredVideos] = useState<Video[]>([...MOCK_VIDEOS]);
+  const [videos, setVideos] = useState<Video[]>([]);
+  const [filteredVideos, setFilteredVideos] = useState<Video[]>([]);
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
   const [isPlayerOpen, setIsPlayerOpen] = useState(false);
   const [selectedPlaylists, setSelectedPlaylists] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<SortOption>('newest');
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Sync search query from props to local state
   useEffect(() => {
     setLocalSearchQuery(searchQuery);
   }, [searchQuery]);
   
-  // Reload videos from MOCK_VIDEOS whenever the component renders or MOCK_VIDEOS changes
+  // Load videos from local storage on component mount
   useEffect(() => {
-    console.log("Reloading videos from MOCK_VIDEOS", MOCK_VIDEOS.length);
-    setVideos([...MOCK_VIDEOS]);
+        const loadVideos = async () => {
+          try {
+            setIsLoading(true);
+            const fetchedVideos = await getAllVideos();
+            console.log("Loaded videos from local storage:", fetchedVideos.length);
+            setVideos(fetchedVideos);
+          } catch (error) {
+            console.error("Error loading videos:", error);
+            toast.error("Failed to load videos from local storage.");
+          } finally {
+            setIsLoading(false);
+          }
+        };
+    
+    loadVideos();
   }, []);
 
   // Apply filters when selections change
@@ -41,7 +57,7 @@ const VideoGallery: React.FC<VideoGalleryProps> = ({ searchQuery = '' }) => {
       result = result.filter(
         video => 
           video.title.toLowerCase().includes(query) || 
-          video.description.toLowerCase().includes(query)
+          (video.description || '').toLowerCase().includes(query)
       );
     }
     
@@ -110,7 +126,17 @@ const VideoGallery: React.FC<VideoGalleryProps> = ({ searchQuery = '' }) => {
           </span>
         </h2>
         
-        {filteredVideos.length === 0 ? (
+        {isLoading ? (
+          <div className="space-y-4">
+            <div className="text-center py-8">
+              <div className="text-lg font-medium mb-2">Loading videos...</div>
+              <div className="text-sm text-muted-foreground mb-4">
+                Loading your video collection from local storage
+              </div>
+              <Progress value={undefined} className="w-full max-w-md mx-auto" />
+            </div>
+          </div>
+        ) : filteredVideos.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-muted-foreground text-lg">No videos match your filters.</p>
             <button 

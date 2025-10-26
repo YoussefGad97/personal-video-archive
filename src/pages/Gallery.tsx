@@ -46,11 +46,11 @@ const Gallery: React.FC = () => {
   
   return (
     <div className="min-h-screen bg-background">
-      <Navbar />
-      <HeroSection 
+      <Navbar 
         onVideoAdded={handleVideoAdded}
         onSearch={handleSearch}
       />
+      <HeroSection />
       <main>
         <VideoGallery 
           key={galleryKey}

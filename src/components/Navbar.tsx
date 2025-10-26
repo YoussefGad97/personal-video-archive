@@ -16,8 +16,7 @@ import {
 import { Search, Plus, LogOut, Settings, User as UserIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import AddVideoDialog from './AddVideoDialog';
-import { VideoFormData, Video } from '@/lib/types';
-import { v4 as uuid } from 'uuid';
+import { Video } from '@/lib/types';
 
 interface NavbarProps {
   onSearch?: (query: string) => void;
@@ -43,17 +42,10 @@ const Navbar: React.FC<NavbarProps> = ({ onSearch, onVideoAdded }) => {
     navigate('/');
   };
 
-  const handleAddVideo = (videoData: VideoFormData) => {
-    const newVideo = {
-      ...videoData,
-      id: uuid(),
-      dateAdded: new Date().toISOString().split('T')[0], // today's date in YYYY-MM-DD format
-      views: 0
-    };
-    
+  const handleAddVideo = (video: Video) => {
     // Notify parent component if callback provided
     if (onVideoAdded) {
-      onVideoAdded(newVideo);
+      onVideoAdded(video);
     }
   };
 
@@ -156,12 +148,7 @@ const Navbar: React.FC<NavbarProps> = ({ onSearch, onVideoAdded }) => {
       <AddVideoDialog 
         isOpen={isAddVideoDialogOpen} 
         onClose={() => setIsAddVideoDialogOpen(false)}
-        onAddVideo={(video) => {
-          // If you want to notify parent, call onVideoAdded
-          if (onVideoAdded) {
-            onVideoAdded(video);
-          }
-        }}
+        onAddVideo={handleAddVideo}
       />
     </header>
   );
